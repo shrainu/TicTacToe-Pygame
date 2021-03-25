@@ -6,6 +6,10 @@ import pygame
 pygame.font.init()
 
 
+# Game Variables
+game_over = False
+
+
 # Screen Variables
 HEIGHT, WIDTH = 450, 450
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -89,13 +93,83 @@ def get_tile_in_focus(tiles, mouse_pos):
 
 
 # To place X or O to any tile
-def set_tile_type(tiles, tile_in_focus, mouse_pressed):
+def set_tile_type(tiles, tile_in_focus, mouse_pressed, x_tiles, o_tiles):
     if tile_in_focus != None:
         if tiles[tile_in_focus].owner == TileType.tile_none:
             if mouse_pressed == (1,0,0):
                 tiles[tile_in_focus].set_owner(TileType.tile_x)
+                x_tiles.append(tiles[tile_in_focus])
+                # To check every time a cell value is changed
+                check_nearby_cells(tiles)
             elif mouse_pressed == (0,0,1):
                 tiles[tile_in_focus].set_owner(TileType.tile_o)
+                o_tiles.append(tiles[tile_in_focus])
+                # To check every time a cell value is changed
+                check_nearby_cells(tiles)
+        
+
+# To check the nearby cells to see if they are X or O
+def check_nearby_cells(tiles):
+    for tile in tiles:
+        right,down,down_left,down_right = 0,0,0,0
+        search = True
+        if tile.owner == TileType.tile_none:
+            continue
+        while search:
+            if right >= 0:
+                if right == 3:
+                    print(tile.tile_text, "has won the game!")
+                    print("Player has won the game with: right")
+                    search = False
+                    game_over = True
+                if tile.tile_index + right <= len(tiles) - 1:
+                    if tiles[tile.tile_index + right].owner == tile.owner:
+                        right += 1
+                    else:
+                        right = -1
+                else:
+                    right = -1
+            if down >= 0:
+                if down == 3:
+                    print(tile.tile_text, "has won the game!")
+                    print("Player has won the game with: down")
+                    search = False
+                    game_over = True
+                if tile.tile_index + (down * 3) <= len(tiles) - 1:
+                    if tiles[tile.tile_index + (down * 3)].owner == tile.owner:
+                        down += 1
+                    else:
+                        down = -1
+                else:
+                    down = -1
+            if down_right >= 0:
+                if down_right == 3:
+                    print(tile.tile_text, "has won the game!")
+                    print("Player has won the game with: down_right")
+                    search = False
+                    game_over = True
+                if tile.tile_index + (down_right * 4) <= len(tiles) - 1:
+                    if tiles[tile.tile_index + (down_right * 4)].owner == tile.owner:
+                        down_right += 1
+                    else:
+                        down_right = -1
+                else:
+                    down_right = -1
+            if down_left >= 0:
+                if down_left == 3:
+                    print(tile.tile_text, "has won the game!")
+                    print("Player has won the game with: down_left")
+                    search = False
+                    game_over = True
+                if tile.tile_index + (down_left * 2) <= len(tiles) - 1:
+                    if tiles[tile.tile_index + (down_left * 2)].owner == tile.owner:
+                        down_left += 1
+                    else:
+                        down_left = -1
+                else:
+                    down_left = -1
+            if right == -1 and down == -1 and down_right == -1 and down_left == -1:
+                search = False
 
 
 def handle_player_input(keys_pressed, mouse_pressed, play):
@@ -202,6 +276,8 @@ def main():
     tile7 = Tile(150, 300, 7)
     tile8 = Tile(300, 300, 8)
     tiles = [tile0, tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8]
+    x_tiles = []
+    o_tiles = []
     tile_in_focus = None
     
     clock = pygame.time.Clock()
@@ -239,7 +315,7 @@ def main():
             if mm_button_in_focus == MenuButtons.start_button:
                 if mouse_pressed == (1,0,0):
                     play = True
-                    time.sleep(1)
+                    time.sleep(0.5)
             # Exit button
             if mm_button_in_focus == MenuButtons.exit_button:
                 if mouse_pressed == (1,0,0):
@@ -249,7 +325,8 @@ def main():
             #print(mm_button_in_focus)
         else:
             tile_in_focus = get_tile_in_focus(tiles, mouse_pos)
-            set_tile_type(tiles, tile_in_focus, mouse_pressed)
+            if not game_over:
+                set_tile_type(tiles, tile_in_focus, mouse_pressed, x_tiles, o_tiles)
             
             update_display1(tiles, mouse_pos)
             #print(tile_in_focus)
