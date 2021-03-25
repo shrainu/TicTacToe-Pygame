@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import enum
 import pygame
 pygame.font.init()
@@ -25,6 +26,8 @@ GAME_FONT = pygame.font.SysFont('arial', 40)
 GAME_FONT.set_bold(True)
 BIG_FONT = pygame.font.SysFont('arial', 120)
 BIG_FONT.set_bold(True)
+TILE_FONT = pygame.font.SysFont('arial', 160)
+TILE_FONT.set_bold(True)
 mm_play_text_W = MAIN_FONT.render("PLAY", 1, WHITE)
 mm_play_text_B = MAIN_FONT.render("PLAY", 1, BLACK)
 mm_exit_text_W = MAIN_FONT.render("EXIT", 1, WHITE)
@@ -46,10 +49,24 @@ class TileType(enum.Enum):
 
 
 class Tile():
-    def __init__(self, x_pos, y_pos):
+    def __init__(self, x_pos, y_pos, index):
         self.tile_rect = pygame.Rect((x_pos, y_pos), (150, 150))
         self.owner = TileType.tile_none
-        
+        self.tile_index = index
+        self.tile_text = "None"
+        self.text_color = WHITE
+
+    def set_owner(self, new_owner):
+        self.owner = new_owner
+        if new_owner == TileType.tile_x:
+            self.tile_text = "X"
+            self.text_color = BLUE
+        elif new_owner == TileType.tile_o:
+            self.tile_text = "O"
+            self.text_color = GREEN
+
+    def return_text(self):
+        return TILE_FONT.render(self.tile_text, 1, self.text_color)
 
 
 def set_mm_button(mouse_pos):
@@ -63,8 +80,28 @@ def set_mm_button(mouse_pos):
             return MenuButtons.exit_button
 
 
-def handle_player_input(keys_pressed, mouse_pressed):
-    pass
+# To detect which tile is under the cursor
+def get_tile_in_focus(tiles, mouse_pos):
+    for tile in tiles:
+        if mouse_pos[0] > tile.tile_rect.x and mouse_pos[0] < tile.tile_rect.x + tile.tile_rect.width:
+            if mouse_pos[1] > tile.tile_rect.y and mouse_pos[1] < tile.tile_rect.y + tile.tile_rect.height:
+                return tile.tile_index
+
+
+# To place X or O to any tile
+def set_tile_type(tiles, tile_in_focus, mouse_pressed):
+    if tile_in_focus != None:
+        if tiles[tile_in_focus].owner == TileType.tile_none:
+            if mouse_pressed == (1,0,0):
+                tiles[tile_in_focus].set_owner(TileType.tile_x)
+            elif mouse_pressed == (0,0,1):
+                tiles[tile_in_focus].set_owner(TileType.tile_o)
+
+
+def handle_player_input(keys_pressed, mouse_pressed, play):
+    # Tiles
+    if play:
+        pass
 
 
 # Update the Main Menu screen
@@ -116,11 +153,17 @@ def update_display1(tiles, mouse_pos):
     for tile in tiles:
         if mouse_pos[0] > tile.tile_rect.x and mouse_pos[0] < tile.tile_rect.x + tile.tile_rect.width:
             if mouse_pos[1] > tile.tile_rect.y and mouse_pos[1] < tile.tile_rect.y + tile.tile_rect.height:
-                pygame.draw.rect(SCREEN, RED, tile.tile_rect)
+                #pygame.draw.rect(SCREEN, RED, tile.tile_rect)
+                if tile.owner != TileType.tile_none:
+                    SCREEN.blit(tile.return_text(), (tile.tile_rect.x+10, tile.tile_rect.y-10))
             else:
-                pygame.draw.rect(SCREEN, GREEN, tile.tile_rect)
+                #pygame.draw.rect(SCREEN, GREEN, tile.tile_rect)
+                if tile.owner != TileType.tile_none:
+                    SCREEN.blit(tile.return_text(), (tile.tile_rect.x+10, tile.tile_rect.y-10))
         else:
-            pygame.draw.rect(SCREEN, GREEN, tile.tile_rect)
+            #pygame.draw.rect(SCREEN, GREEN, tile.tile_rect)
+            if tile.owner != TileType.tile_none:
+                    SCREEN.blit(tile.return_text(), (tile.tile_rect.x+10, tile.tile_rect.y-10))
 
     # Horizontal Lines
     pygame.draw.line(SCREEN, WHITE, (0, 3), (450, 3) ,5)
@@ -149,16 +192,17 @@ def main():
     hide_cursor = False
 
     # Initialize Tiles
-    tile0 = Tile(0, 0)
-    tile1 = Tile(150, 0)
-    tile2 = Tile(300, 0)
-    tile3 = Tile(0, 150)
-    tile4 = Tile(150, 150)
-    tile5 = Tile(300, 150)
-    tile6 = Tile(0, 300)
-    tile7 = Tile(150, 300)
-    tile8 = Tile(300, 300)
+    tile0 = Tile(0, 0, 0)
+    tile1 = Tile(150, 0, 1)
+    tile2 = Tile(300, 0, 2)
+    tile3 = Tile(0, 150, 3)
+    tile4 = Tile(150, 150, 4)
+    tile5 = Tile(300, 150, 5)
+    tile6 = Tile(0, 300, 6)
+    tile7 = Tile(150, 300, 7)
+    tile8 = Tile(300, 300, 8)
     tiles = [tile0, tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8]
+    tile_in_focus = None
     
     clock = pygame.time.Clock()
     
@@ -181,7 +225,7 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
 
         # To handle player input
-        handle_player_input(keys_pressed, mouse_pressed)
+        handle_player_input(keys_pressed, mouse_pressed, play)
         
         # To change scene
         if not play:
@@ -195,6 +239,7 @@ def main():
             if mm_button_in_focus == MenuButtons.start_button:
                 if mouse_pressed == (1,0,0):
                     play = True
+                    time.sleep(1)
             # Exit button
             if mm_button_in_focus == MenuButtons.exit_button:
                 if mouse_pressed == (1,0,0):
@@ -203,7 +248,11 @@ def main():
                     sys.exit()
             #print(mm_button_in_focus)
         else:
+            tile_in_focus = get_tile_in_focus(tiles, mouse_pos)
+            set_tile_type(tiles, tile_in_focus, mouse_pressed)
+            
             update_display1(tiles, mouse_pos)
+            #print(tile_in_focus)
             
     main()
 
