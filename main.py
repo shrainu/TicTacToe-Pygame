@@ -41,17 +41,20 @@ mm_o_text_W = BIG_FONT.render("O", 1, WHITE)
 mm_game_text_B = GAME_FONT.render("GAME", 1, BLACK)
 
 
+# Button Enum
 class MenuButtons(enum.Enum):
     start_button = 0
     exit_button = 1
 
 
+# Tile Type Enum
 class TileType(enum.Enum):
     tile_none = 0
     tile_x = 1
     tile_o = 2
 
 
+# Tile Object Class
 class Tile():
     def __init__(self, x_pos, y_pos, index):
         self.tile_rect = pygame.Rect((x_pos, y_pos), (150, 150))
@@ -73,6 +76,7 @@ class Tile():
         return TILE_FONT.render(self.tile_text, 1, self.text_color)
 
 
+# To detect which button is under the mouse
 def set_mm_button(mouse_pos):
     # Play Text ----------------------------------------
     if mouse_pos[0] >= 50 and mouse_pos[0] <= 175:
@@ -93,17 +97,15 @@ def get_tile_in_focus(tiles, mouse_pos):
 
 
 # To place X or O to any tile
-def set_tile_type(tiles, tile_in_focus, mouse_pressed, x_tiles, o_tiles):
+def set_tile_type(tiles, tile_in_focus, mouse_pressed):
     if tile_in_focus != None:
         if tiles[tile_in_focus].owner == TileType.tile_none:
             if mouse_pressed == (1,0,0):
                 tiles[tile_in_focus].set_owner(TileType.tile_x)
-                x_tiles.append(tiles[tile_in_focus])
                 # To check every time a cell value is changed
                 check_nearby_cells(tiles)
             elif mouse_pressed == (0,0,1):
                 tiles[tile_in_focus].set_owner(TileType.tile_o)
-                o_tiles.append(tiles[tile_in_focus])
                 # To check every time a cell value is changed
                 check_nearby_cells(tiles)
         
@@ -172,10 +174,9 @@ def check_nearby_cells(tiles):
                 search = False
 
 
+# Doesn't do anything for now
 def handle_player_input(keys_pressed, mouse_pressed, play):
-    # Tiles
-    if play:
-        pass
+    pass
 
 
 # Update the Main Menu screen
@@ -276,8 +277,6 @@ def main():
     tile7 = Tile(150, 300, 7)
     tile8 = Tile(300, 300, 8)
     tiles = [tile0, tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8]
-    x_tiles = []
-    o_tiles = []
     tile_in_focus = None
     
     clock = pygame.time.Clock()
@@ -326,7 +325,7 @@ def main():
         else:
             tile_in_focus = get_tile_in_focus(tiles, mouse_pos)
             if not game_over:
-                set_tile_type(tiles, tile_in_focus, mouse_pressed, x_tiles, o_tiles)
+                set_tile_type(tiles, tile_in_focus, mouse_pressed)
             
             update_display1(tiles, mouse_pos)
             #print(tile_in_focus)
