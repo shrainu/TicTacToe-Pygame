@@ -8,6 +8,4 @@
 ## What is missing:
 
  - Can't play against computer yet.
- - Some GUI stuff is not added yet.
  - Sound is not added yet.
- - There is no replay function currently, you need to restart the game.
